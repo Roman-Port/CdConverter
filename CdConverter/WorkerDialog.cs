@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,13 +68,17 @@ namespace CdConverter
         private void WorkerThread()
         {
             //Process each track
+            string[] outputFilenames = new string[tracks.Length];
             for (int i = 0; i < tracks.Length; i++)
             {
+                //Create output filename
+                outputFilenames[i] = outputDir.FullName + Path.DirectorySeparatorChar + $"track{i}_{tracks[i].FileName.Name}.wav";
+
                 //Update status
                 UpdateStatus(i, $"Converting track {i} of {tracks.Length}: {tracks[i].FileName}");
 
                 //Convert
-                if (!FfmpegUtil.ConvertFile(tracks[i].FileName.FullName, "-ac 2 -ar 44100 -map 0:a", GenerateTrackFilename(i)))
+                if (!FfmpegUtil.ConvertFile(tracks[i].FileName.FullName, "-bitexact -map_metadata -1 -ac 2 -ar 44100 -map 0:a", outputFilenames[i]))
                 {
                     WorkerFinish(false, $"Failed to convert track #{i + 1}: {tracks[i].FileName}");
                     return;
@@ -86,18 +91,13 @@ namespace CdConverter
             //Write CUE sheet
             using (FileStream fs = new FileStream(outputDir.FullName + Path.DirectorySeparatorChar + "index.cue", FileMode.Create))
             using (StreamWriter sw = new StreamWriter(fs))
-                WriteCueSheet(sw);
+                WriteCueSheet(sw, outputFilenames);
 
             //Exit
             WorkerFinish(true, $"Successfully converted {tracks.Length} tracks.");
         }
 
-        private string GenerateTrackFilename(int index)
-        {
-            return outputDir.FullName + Path.DirectorySeparatorChar + $"track{index}.wav";
-        }
-
-        private void WriteCueSheet(StreamWriter sw)
+        private void WriteCueSheet(StreamWriter sw, string[] outputFilenames)
         {
             //Write performer and artist
             sw.WriteLine($"PERFORMER \"{cdArtist}\"");
@@ -106,7 +106,7 @@ namespace CdConverter
             //Write each track
             for (int i = 0; i < tracks.Length; i++)
             {
-                sw.WriteLine($"FILE \"{GenerateTrackFilename(i)}\" WAVE");
+                sw.WriteLine($"FILE \"{outputFilenames[i]}\" WAVE");
                 sw.WriteLine($"  TRACK {(i+1).ToString().PadLeft(2, '0')} AUDIO");
                 sw.WriteLine($"    PERFORMER \"{tracks[i].Artist}\"");
                 sw.WriteLine($"    TITLE \"{tracks[i].Title}\"");

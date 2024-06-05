@@ -202,7 +202,7 @@
             this.Controls.Add(this.groupBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "CD Converter";
+            this.Text = "CD Converter (v0.4)";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.trackTable)).EndInit();
             this.groupBox1.ResumeLayout(false);
