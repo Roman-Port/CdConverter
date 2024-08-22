@@ -65,6 +65,19 @@ namespace CdConverter
             worker.Start();
         }
 
+        private const string OUTPUT_FILENAME_CHARS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890 _-.";
+
+        private string CreateOutputFilename(string inputName)
+        {
+            char[] name = inputName.ToCharArray();
+            for (int i = 0; i < name.Length; i++)
+            {
+                if (!OUTPUT_FILENAME_CHARS.Contains(name[i]))
+                    name[i] = '_';
+            }
+            return new string(name);
+        }
+
         private void WorkerThread()
         {
             //Process each track
@@ -72,7 +85,7 @@ namespace CdConverter
             for (int i = 0; i < tracks.Length; i++)
             {
                 //Create output filename
-                outputFilenames[i] = outputDir.FullName + Path.DirectorySeparatorChar + $"track{i}_{tracks[i].FileName.Name}.wav";
+                outputFilenames[i] = outputDir.FullName + Path.DirectorySeparatorChar + $"track{i}_{CreateOutputFilename(tracks[i].FileName.Name)}.wav";
 
                 //Update status
                 UpdateStatus(i, $"Converting track {i} of {tracks.Length}: {tracks[i].FileName}");
